@@ -30,32 +30,6 @@ CREATE TABLE IF NOT EXISTS messages (
     target_user_id INTEGER REFERENCES users(id),
     created_at TIMESTAMP DEFAULT NOW()
 );
-CREATE TABLE IF NOT EXISTS video_sessions (
-    id SERIAL PRIMARY KEY,
-    room_id INTEGER REFERENCES rooms(id) ON DELETE CASCADE,
-    video_url TEXT NOT NULL,
-    started_at TIMESTAMP DEFAULT NOW()
-);
-CREATE TABLE IF NOT EXISTS video_events (
-    id SERIAL PRIMARY KEY,
-    room_id INTEGER REFERENCES rooms(id) ON DELETE CASCADE,
-    event_type VARCHAR(20) NOT NULL,
-    video_time FLOAT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-CREATE TABLE IF NOT EXISTS voice_sessions (
-    id SERIAL PRIMARY KEY,
-    room_id INTEGER REFERENCES rooms(id) ON DELETE CASCADE,
-    user_id INTEGER REFERENCES users(id),
-    joined_at TIMESTAMP DEFAULT NOW()
-);
-CREATE TABLE IF NOT EXISTS server_logs (
-    id SERIAL PRIMARY KEY,
-    event_type VARCHAR(50) NOT NULL,
-    user_id INTEGER REFERENCES users(id),
-    description TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
-);
 """
 
 import time
