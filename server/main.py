@@ -11,7 +11,8 @@ import db
 import auth
 import rooms
 import chat
-import logger 
+import video
+import logger
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -111,6 +112,15 @@ async def handle_message(ws, msg):
                 await send_msg(ws, {"type": "CHAT_DM", "from": client["username"], "to": msg.get("target"), "content": msg.get("content")})
             else:
                 await send_msg(ws, {"type": "ERROR", "message": result})
+
+        elif msg_type == "VIDEO_SYNC":
+            video_msg, members = video.handle_video_sync(
+                msg.get("roomId"), client["user_id"], client["username"],
+                msg.get("event"), msg.get("videoTime", 0), msg.get("videoUrl"),
+            )
+            for ws_obj in members.values():
+                if ws_obj != ws:
+                    asyncio.ensure_future(send_msg(ws_obj, video_msg))
 
 
 
