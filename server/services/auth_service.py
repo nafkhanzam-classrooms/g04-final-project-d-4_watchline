@@ -1,9 +1,9 @@
 import hashlib
 import secrets
-import db
+from db import execute, fetchone
 
-# {token: {user_id, username}}
-sessions = {}
+# In-memory session store: {token: {user_id, username}}
+_sessions = {}
 
 
 def _hash_password(password):
@@ -16,14 +16,13 @@ def register(username, password):
         return False, "Username and password required", None
     if len(username) > 50:
         return False, "Username too long", None
-    existing = db.fetchone("SELECT id FROM users WHERE username = %s", (username,))
-    if existing:
+    if fetchone("SELECT id FROM users WHERE username = %s", (username,)):
         return False, "Username already taken", None
-    db.execute(
+    execute(
         "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
         (username, _hash_password(password)),
     )
-    row = db.fetchone("SELECT id FROM users WHERE username = %s", (username,))
+    row = fetchone("SELECT id FROM users WHERE username = %s", (username,))
     return True, "Registered", row[0]
 
 
@@ -31,9 +30,7 @@ def login(username, password):
     """Returns (success, message, user_id)."""
     if not username or not password:
         return False, "Username and password required", None
-    row = db.fetchone(
-        "SELECT id, password_hash FROM users WHERE username = %s", (username,)
-    )
+    row = fetchone("SELECT id, password_hash FROM users WHERE username = %s", (username,))
     if not row or row[1] != _hash_password(password):
         return False, "Invalid credentials", None
     return True, "Login successful", row[0]
@@ -41,13 +38,9 @@ def login(username, password):
 
 def create_token(user_id, username):
     token = secrets.token_hex(16)
-    sessions[token] = {"user_id": user_id, "username": username}
+    _sessions[token] = {"user_id": user_id, "username": username}
     return token
 
 
 def validate_token(token):
-    return sessions.get(token)
-
-
-def remove_token(token):
-    sessions.pop(token, None)
+    return _sessions.get(token)
