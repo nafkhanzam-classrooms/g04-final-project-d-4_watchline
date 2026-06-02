@@ -1,7 +1,7 @@
 import os
 
 HOST = os.getenv("SERVER_HOST", "0.0.0.0")
-PORT = int(os.getenv("SERVER_PORT", "8443"))
+PORT = int(os.getenv("SERVER_PORT", "8080"))
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = int(os.getenv("DB_PORT", "5432"))

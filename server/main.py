@@ -1,54 +1,35 @@
-import socket
-import selectors
+import asyncio
+import json
 import ssl
 import os
 import logging
 
+import websockets
+
 import config
-import protocol
 import db
 import auth
 import rooms
+import logger 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
-sel = selectors.DefaultSelector()
-
-# {fileno: {sock, addr, buf, user_id, username}}
-clients = {}
+# {ws: {user_id, username}}
+ws_clients = {}
 
 
-def create_ssl_context():
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    ctx.load_cert_chain(config.TLS_CERT, config.TLS_KEY)
-    return ctx
-
-
-def send_msg(sock, msg):
+async def send_msg(ws_obj, msg):
     try:
-        sock.sendall(protocol.encode(msg))
-    except (BrokenPipeError, OSError):
-        disconnect(sock)
+        await ws_obj.send(json.dumps(msg))
+    except websockets.ConnectionClosed:
+        pass
 
-
-def disconnect(sock):
-    fd = sock.fileno()
-    if fd == -1:
+async def handle_message(ws, msg):
+    client = ws_clients.get(ws)
+    if not client:
         return
-    sel.unregister(sock)
-    rooms.remove_client(fd)
-    info = clients.pop(fd, None)
-    if info:
-        logger.info("Client disconnected: %s", info["addr"])
-    sock.close()
-
-
-def handle_message(sock, msg):
-    """Route incoming message to appropriate manager."""
     msg_type = msg.get("type")
-    fd = sock.fileno()
-    client = clients.get(fd)
 
     if msg_type == "REGISTER":
         ok, message, user_id = auth.register(msg.get("username"), msg.get("password"))
@@ -56,9 +37,10 @@ def handle_message(sock, msg):
             token = auth.create_token(user_id, msg.get("username"))
             client["user_id"] = user_id
             client["username"] = msg.get("username")
-            send_msg(sock, {"type": "AUTH_OK", "token": token, "username": msg.get("username")})
+            logger.log("REGISTER", user_id, msg.get("username"))
+            await send_msg(ws, {"type": "AUTH_OK", "token": token, "username": msg.get("username")})
         else:
-            send_msg(sock, {"type": "AUTH_FAIL", "message": message})
+            await send_msg(ws, {"type": "AUTH_FAIL", "message": message})
 
     elif msg_type == "LOGIN":
         ok, message, user_id = auth.login(msg.get("username"), msg.get("password"))
@@ -66,102 +48,86 @@ def handle_message(sock, msg):
             token = auth.create_token(user_id, msg.get("username"))
             client["user_id"] = user_id
             client["username"] = msg.get("username")
-            send_msg(sock, {"type": "AUTH_OK", "token": token, "username": msg.get("username")})
+            logger.log("LOGIN", user_id, msg.get("username"))
+            await send_msg(ws, {"type": "AUTH_OK", "token": token, "username": msg.get("username")})
         else:
-            send_msg(sock, {"type": "AUTH_FAIL", "message": message})
+            await send_msg(ws, {"type": "AUTH_FAIL", "message": message})
+
+    elif msg_type == "RECONNECT":
+        session = auth.validate_token(msg.get("token"))
+        if session:
+            client["user_id"] = session["user_id"]
+            client["username"] = session["username"]
+            logger.log("RECONNECT", session["user_id"], session["username"])
+            await send_msg(ws, {"type": "AUTH_OK", "token": msg.get("token"), "username": session["username"]})
+        else:
+            await send_msg(ws, {"type": "AUTH_FAIL", "message": "Invalid or expired token"})
 
     else:
-        if not client or not client.get("user_id"):
-            send_msg(sock, {"type": "ERROR", "message": "Not authenticated"})
+        if not client.get("user_id"):
+            await send_msg(ws, {"type": "ERROR", "message": "Not authenticated"})
             return
-
+        
         if msg_type == "ROOM_CREATE":
             ok, message, room_id = rooms.create_room(msg.get("name"), client["user_id"])
             if ok:
-                send_msg(sock, {"type": "ROOM_CREATE", "room_id": room_id, "name": msg.get("name")})
+                await send_msg(ws, {"type": "ROOM_CREATE", "room_id": room_id, "name": msg.get("name")})
             else:
-                send_msg(sock, {"type": "ERROR", "message": message})
+                await send_msg(ws, {"type": "ERROR", "message": message})
 
         elif msg_type == "ROOM_JOIN":
-            ok, message = rooms.join_room(msg.get("roomId"), client["user_id"], fd, sock)
+            ok, message = rooms.join_room(msg.get("roomId"), client["user_id"], id(ws), ws)
             if ok:
-                send_msg(sock, {"type": "ROOM_JOIN", "roomId": msg.get("roomId")})
+                await send_msg(ws, {"type": "ROOM_JOIN", "roomId": msg.get("roomId")})
             else:
-                send_msg(sock, {"type": "ERROR", "message": message})
+                await send_msg(ws, {"type": "ERROR", "message": message})
 
         elif msg_type == "ROOM_LEAVE":
-            ok, message = rooms.leave_room(msg.get("roomId"), client["user_id"], fd)
-            send_msg(sock, {"type": "ROOM_LEAVE", "roomId": msg.get("roomId")})
+            rooms.leave_room(msg.get("roomId"), client["user_id"], id(ws))
+            await send_msg(ws, {"type": "ROOM_LEAVE", "roomId": msg.get("roomId")})
 
         elif msg_type == "ROOM_LIST":
             room_list = rooms.list_rooms()
-            send_msg(sock, {"type": "ROOM_LIST_RESP", "rooms": room_list})
+            await send_msg(ws, {"type": "ROOM_LIST_RESP", "rooms": room_list})
 
-        else:
-            send_msg(sock, {"type": "ERROR", "message": f"Unknown type: {msg_type}"})
+        elif msg_type == "ROOM_MEMBERS":
+            usernames = rooms.get_online_usernames(msg.get("roomId"), ws_clients)
+            await send_msg(ws, {"type": "ROOM_MEMBERS_RESP", "roomId": msg.get("roomId"), "members": usernames})
 
 
-def on_read(sock):
-    fd = sock.fileno()
-    client = clients.get(fd)
-    if not client:
-        return
+async def handler(ws):
+    ws_clients[ws] = {"user_id": None, "username": None}
+    log.info("Client connected: %s", ws.remote_address)
     try:
-        data = sock.recv(4096)
-    except (ConnectionResetError, OSError):
-        data = b""
-    if not data:
-        disconnect(sock)
-        return
-    client["buf"].extend(data)
-    if len(client["buf"]) > config.MAX_MSG_SIZE:
-        send_msg(sock, {"type": "ERROR", "message": "Message too large"})
-        disconnect(sock)
-        return
-    messages, client["buf"] = protocol.decode_from_buffer(client["buf"])
-    for msg in messages:
-        handle_message(sock, msg)
-
-
-def on_accept(server_sock):
-    conn, addr = server_sock.accept()
-    conn.setblocking(False)
-    fd = conn.fileno()
-    clients[fd] = {"sock": conn, "addr": addr, "buf": bytearray(), "user_id": None, "username": None}
-    sel.register(conn, selectors.EVENT_READ, on_read)
-    logger.info("New connection from %s", addr)
-
-
-def run():
-    db.init_db()
-    logger.info("Database initialized")
-
-    server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_sock.bind((config.HOST, config.PORT))
-    server_sock.listen()
-    server_sock.setblocking(False)
-
-    if os.path.exists(config.TLS_CERT) and os.path.exists(config.TLS_KEY):
-        ctx = create_ssl_context()
-        server_sock = ctx.wrap_socket(server_sock, server_side=True, do_handshake_on_connect=False)
-        logger.info("TLS enabled")
-
-    sel.register(server_sock, selectors.EVENT_READ, on_accept)
-    logger.info("Server listening on %s:%d", config.HOST, config.PORT)
-
-    try:
-        while True:
-            events = sel.select(timeout=1)
-            for key, _ in events:
-                callback = key.data
-                callback(key.fileobj)
-    except KeyboardInterrupt:
-        logger.info("Shutting down")
+        async for message in ws:
+            try:
+                msg = json.loads(message)
+            except json.JSONDecodeError:
+                await send_msg(ws, {"type": "ERROR", "message": "Invalid JSON"})
+                continue
+            await handle_message(ws, msg)
+    except websockets.ConnectionClosed:
+        pass
     finally:
-        sel.close()
-        server_sock.close()
+        client = ws_clients.pop(ws, None)
+        if client:
+            logger.log("DISCONNECT", client.get("user_id"), str(ws.remote_address))
+        rooms.remove_client(id(ws))
+
+async def main():
+    db.init_db()
+    log.info("Database initialized")
+
+    ssl_ctx = None
+    if os.path.exists(config.TLS_CERT) and os.path.exists(config.TLS_KEY):
+        ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_ctx.load_cert_chain(config.TLS_CERT, config.TLS_KEY)
+        log.info("TLS enabled")
+
+    async with websockets.serve(handler, config.HOST, config.PORT, ssl=ssl_ctx):
+        log.info("Server listening on %s:%d", config.HOST, config.PORT)
+        await asyncio.Future()
 
 
 if __name__ == "__main__":
-    run()
+    asyncio.run(main())

@@ -52,6 +52,17 @@ def get_room_sockets(room_id):
     return room_members.get(room_id, {})
 
 
+def get_online_usernames(room_id, ws_clients):
+    """Return list of usernames currently online in a room."""
+    members = room_members.get(room_id, {})
+    usernames = []
+    for fd, obj in members.items():
+        for client_obj, info in ws_clients.items():
+            if id(client_obj) == fd and info.get("username"):
+                usernames.append(info["username"])
+    return usernames
+
+
 def remove_client(fd):
     """Remove a client from all rooms (on disconnect)."""
     for room_id in list(room_members.keys()):
