@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: watchline
+      POSTGRES_PASSWORD: watchline
+      POSTGRES_DB: watchline
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    build: ./server
+    ports:
+      - "8443:8443"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+
+volumes:
+  pgdata:

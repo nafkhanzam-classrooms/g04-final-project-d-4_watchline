@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS video_events (
     id SERIAL PRIMARY KEY,
     room_id INTEGER REFERENCES rooms(id) ON DELETE CASCADE,
     event_type VARCHAR(20) NOT NULL,
-    current_time FLOAT DEFAULT 0,
+    video_time FLOAT DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW()
 );
 CREATE TABLE IF NOT EXISTS voice_sessions (
@@ -58,20 +58,29 @@ CREATE TABLE IF NOT EXISTS server_logs (
 );
 """
 
+import time
+
 _conn = None
 
 
 def get_conn():
     global _conn
     if _conn is None or _conn.closed:
-        _conn = psycopg2.connect(
-            host=config.DB_HOST,
-            port=config.DB_PORT,
-            dbname=config.DB_NAME,
-            user=config.DB_USER,
-            password=config.DB_PASS,
-        )
-        _conn.autocommit = True
+        for attempt in range(10):
+            try:
+                _conn = psycopg2.connect(
+                    host=config.DB_HOST,
+                    port=config.DB_PORT,
+                    dbname=config.DB_NAME,
+                    user=config.DB_USER,
+                    password=config.DB_PASS,
+                )
+                _conn.autocommit = True
+                return _conn
+            except psycopg2.OperationalError:
+                print(f"DB not ready, retrying ({attempt+1}/10)...")
+                time.sleep(2)
+        raise Exception("Could not connect to database")
     return _conn
 
 
