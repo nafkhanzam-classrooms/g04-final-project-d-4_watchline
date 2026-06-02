@@ -8,6 +8,7 @@ import config
 import protocol
 import db
 import auth
+import rooms
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ def disconnect(sock):
     if fd == -1:
         return
     sel.unregister(sock)
+    rooms.remove_client(fd)
     info = clients.pop(fd, None)
     if info:
         logger.info("Client disconnected: %s", info["addr"])
@@ -72,7 +74,31 @@ def handle_message(sock, msg):
         if not client or not client.get("user_id"):
             send_msg(sock, {"type": "ERROR", "message": "Not authenticated"})
             return
-        send_msg(sock, {"type": "ERROR", "message": f"Unknown type: {msg_type}"})
+
+        if msg_type == "ROOM_CREATE":
+            ok, message, room_id = rooms.create_room(msg.get("name"), client["user_id"])
+            if ok:
+                send_msg(sock, {"type": "ROOM_CREATE", "room_id": room_id, "name": msg.get("name")})
+            else:
+                send_msg(sock, {"type": "ERROR", "message": message})
+
+        elif msg_type == "ROOM_JOIN":
+            ok, message = rooms.join_room(msg.get("roomId"), client["user_id"], fd, sock)
+            if ok:
+                send_msg(sock, {"type": "ROOM_JOIN", "roomId": msg.get("roomId")})
+            else:
+                send_msg(sock, {"type": "ERROR", "message": message})
+
+        elif msg_type == "ROOM_LEAVE":
+            ok, message = rooms.leave_room(msg.get("roomId"), client["user_id"], fd)
+            send_msg(sock, {"type": "ROOM_LEAVE", "roomId": msg.get("roomId")})
+
+        elif msg_type == "ROOM_LIST":
+            room_list = rooms.list_rooms()
+            send_msg(sock, {"type": "ROOM_LIST_RESP", "rooms": room_list})
+
+        else:
+            send_msg(sock, {"type": "ERROR", "message": f"Unknown type: {msg_type}"})
 
 
 def on_read(sock):
