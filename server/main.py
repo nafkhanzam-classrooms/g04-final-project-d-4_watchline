@@ -10,6 +10,7 @@ import config
 import db
 import auth
 import rooms
+import chat
 import logger 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -93,6 +94,24 @@ async def handle_message(ws, msg):
         elif msg_type == "ROOM_MEMBERS":
             usernames = rooms.get_online_usernames(msg.get("roomId"), ws_clients)
             await send_msg(ws, {"type": "ROOM_MEMBERS_RESP", "roomId": msg.get("roomId"), "members": usernames})
+
+        elif msg_type == "CHAT_SEND":
+            ok, result, members = chat.send_message(msg.get("roomId"), client["user_id"], client["username"], msg.get("content"))
+            if ok:
+                for ws_obj in members.values():
+                    asyncio.ensure_future(send_msg(ws_obj, result))
+            else:
+                await send_msg(ws, {"type": "ERROR", "message": result})
+
+        elif msg_type == "CHAT_DM":
+            ok, result, target_ws = chat.send_dm(client["user_id"], client["username"], msg.get("target"), msg.get("content"), {id(w): {"user_id": c["user_id"], "sock": w} for w, c in ws_clients.items()})
+            if ok:
+                if target_ws:
+                    asyncio.ensure_future(send_msg(target_ws, result))
+                await send_msg(ws, {"type": "CHAT_DM", "from": client["username"], "to": msg.get("target"), "content": msg.get("content")})
+            else:
+                await send_msg(ws, {"type": "ERROR", "message": result})
+
 
 
 async def handler(ws):
