@@ -35,8 +35,8 @@ export function DashboardView({
 
   if (!initialized || !user) {
     return (
-      <main className="route-loading">
-        <span className="pulse-dot" />
+      <main className="flex min-h-screen items-center justify-center gap-2 bg-background text-xs text-muted">
+        <span className="h-1.5 w-1.5 rounded-full bg-green shadow-[0_0_0_4px_rgba(102,209,158,0.1)]" />
         Menyiapkan ruang...
       </main>
     );
@@ -48,7 +48,7 @@ export function DashboardView({
   };
 
   return (
-    <main className="dashboard">
+    <main className="grid h-screen overflow-hidden grid-cols-[272px_minmax(0,1fr)_328px] max-[1050px]:grid-cols-[232px_minmax(0,1fr)_288px] max-md:grid-cols-[88px_minmax(0,1fr)] max-[560px]:grid-cols-[72px_minmax(0,1fr)]">
       <RoomSidebar
         activeRoom={rooms.activeRoom}
         error={rooms.error}
@@ -66,30 +66,32 @@ export function DashboardView({
             onLeave={rooms.leaveRoom}
             room={rooms.activeRoom}
           />
-          <ChatPanel
-            currentUser={user}
-            directMessages={chat.directMessages}
-            members={rooms.members}
-            messages={chat.messages}
-            onSend={chat.sendMessage}
-            onSendDirect={chat.sendDirectMessage}
-            roomName={rooms.activeRoom.name}
-          />
+          <div className="max-md:hidden">
+            <ChatPanel
+              currentUser={user}
+              directMessages={chat.directMessages}
+              members={rooms.members}
+              messages={chat.messages}
+              onSend={chat.sendMessage}
+              onSendDirect={chat.sendDirectMessage}
+              roomName={rooms.activeRoom.name}
+            />
+          </div>
         </>
       ) : (
-        <section className="no-room-view">
-          <div className="no-room-art">
-            <span className="orbit orbit-one" />
-            <span className="orbit orbit-two" />
+        <section className="col-span-2 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_center,rgba(255,91,77,0.055),transparent_28%),#0d0d11] text-center max-md:col-span-1">
+          <div className="relative mb-7 flex h-22 w-22 items-center justify-center rounded-full border border-line bg-[#18181e] text-accent">
+            <span className="absolute left-1/2 top-1/2 h-[136px] w-[136px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/7" />
+            <span className="absolute left-1/2 top-1/2 h-[184px] w-[184px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/7" />
             <Film size={36} />
           </div>
-          <p className="mini-label">WatchLine lobby</p>
-          <h1>
+          <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-accent">WatchLine lobby</p>
+          <h1 className="mt-2 mb-3 text-[32px] font-semibold leading-[1.25] tracking-tight">
             {rooms.error && selectedRoomId
               ? "Room tidak tersedia."
               : "Pilih ruang untuk memulai."}
           </h1>
-          <p>
+          <p className="max-w-[392px] text-xs leading-relaxed text-[#777782]">
             {rooms.error && selectedRoomId
               ? "Kembali ke lobby dan pilih room lain yang tersedia."
               : "Gabung ke room yang tersedia atau buat ruang baru untuk movie night-mu."}
