@@ -107,7 +107,7 @@ Semua komunikasi antara client dan server menggunakan pesan JSON melalui satu ko
 
 ```json
 {"type": "CHAT_SEND", "roomId": 1, "content": "Hello!"}
-{"type": "CHAT_MSG", "roomId": 1, "username": "user1", "content": "Hello!"}  // broadcast ke semua member
+{"type": "CHAT_MSG", "roomId": 1, "username": "user1", "content": "Hello!"}
 ```
 
 ```json
@@ -119,7 +119,7 @@ Semua komunikasi antara client dan server menggunakan pesan JSON melalui satu ko
 
 ```json
 {"type": "VIDEO_SYNC", "roomId": 1, "event": "play", "videoTime": 42.5, "videoUrl": "https://..."}
-{"type": "VIDEO_STATE", "roomId": 1, "username": "user1", "event": "play", "videoTime": 42.5, "videoUrl": "https://..."}  // broadcast ke member lain
+{"type": "VIDEO_STATE", "roomId": 1, "username": "user1", "event": "play", "videoTime": 42.5, "videoUrl": "https://..."}
 ```
 
 ### Pola Komunikasi
