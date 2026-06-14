@@ -114,7 +114,6 @@ export function useWatchParty(roomId: number) {
   const playerElementId = `watchline-youtube-player-${roomId}`;
   const [videoId, setVideoId] = useState("");
   const [isPlayerReady, setIsPlayerReady] = useState(false);
-  const [lastSync, setLastSync] = useState<string | null>(null);
 
   const sendSync = useCallback(
     (
@@ -223,7 +222,6 @@ export function useWatchParty(roomId: number) {
       subscribe((message) => {
         if (message.type !== "VIDEO_STATE" || message.roomId !== roomId) return;
         applyRemoteState(message);
-        setLastSync(`${message.username} menyinkronkan video`);
       }),
     [applyRemoteState, roomId, subscribe],
   );
@@ -284,7 +282,6 @@ export function useWatchParty(roomId: number) {
     playerElementId,
     videoId,
     isPlayerReady,
-    lastSync,
     changeVideo,
   };
 }

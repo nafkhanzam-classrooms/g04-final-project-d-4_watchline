@@ -46,13 +46,13 @@ export function AuthView({ mode }: Props) {
             Ruang nonton real-time
           </p>
           <h1>
-            Film terasa lebih seru
+            Nonton bareng,
             <br />
-            saat ditonton <em>bersama.</em>
+            tetap <em>sinkron.</em>
           </h1>
           <p className="hero-copy">
-            Sinkronkan video, ngobrol tanpa jeda, dan bagikan momen favorit
-            dalam satu ruang yang terasa dekat.
+            Putar video yang sama, ngobrol langsung, dan nikmati movie night
+            tanpa repot menyamakan waktu.
           </p>
 
           <div className="feature-row">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AtSign, MessageSquare, Send, Users } from "lucide-react";
 import type {
   ChatMessage,
@@ -31,10 +31,29 @@ export function ChatPanel({
   const [content, setContent] = useState("");
   const [target, setTarget] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const targetSuggestions = useMemo(() => {
+    const query = target.trim().toLowerCase();
+    if (!query) return [];
+
+    return members
+      .filter(
+        (member) =>
+          member !== currentUser.username &&
+          member.toLowerCase().startsWith(query) &&
+          member.toLowerCase() !== query,
+      )
+      .slice(0, 6);
+  }, [currentUser.username, members, target]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, directMessages, tab]);
+
+  useEffect(() => {
+    const latestMessage = directMessages.at(-1);
+    if (!latestMessage || latestMessage.from === currentUser.username) return;
+    setTarget(latestMessage.from);
+  }, [currentUser.username, directMessages]);
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -69,7 +88,13 @@ export function ChatPanel({
         </button>
         <button
           className={tab === "dm" ? "active" : ""}
-          onClick={() => setTab("dm")}
+          onClick={() => {
+            const latestIncoming = [...directMessages]
+              .reverse()
+              .find((message) => message.from !== currentUser.username);
+            if (latestIncoming) setTarget(latestIncoming.from);
+            setTab("dm");
+          }}
           type="button"
         >
           <AtSign size={15} />
@@ -81,11 +106,31 @@ export function ChatPanel({
         <div className="dm-target">
           <AtSign size={15} />
           <input
+            autoComplete="off"
             aria-label="Username penerima"
             onChange={(event) => setTarget(event.target.value)}
             placeholder="username tujuan"
             value={target}
           />
+          {targetSuggestions.length > 0 && (
+            <div
+              aria-label="Saran username"
+              className="username-suggestions"
+              role="listbox"
+            >
+              {targetSuggestions.map((member) => (
+                <button
+                  key={member}
+                  onClick={() => setTarget(member)}
+                  role="option"
+                  type="button"
+                >
+                  <span>{member.slice(0, 2).toUpperCase()}</span>
+                  <strong>{member}</strong>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
       <div className="message-list">
@@ -117,6 +162,18 @@ export function ChatPanel({
                       minute: "2-digit",
                     })}
                   </time>
+                  {tab === "dm" && !ownMessage && (
+                    <button
+                      className="reply-button"
+                      onClick={() => {
+                        setTarget(sender);
+                        setTab("dm");
+                      }}
+                      type="button"
+                    >
+                      Balas
+                    </button>
+                  )}
                 </div>
                 <p>{message.content}</p>
               </div>
