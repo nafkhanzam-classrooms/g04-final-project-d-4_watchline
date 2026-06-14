@@ -20,6 +20,10 @@ Sebagai contoh, kalau satu orang menekan play, semua ikut play. Ada juga fitur c
 
 Semua komunikasi berjalan lewat satu koneksi WebSocket. Server dibangun dengan Python (`asyncio` + `websockets`), dan data disimpan di PostgreSQL.
 
+### Video Demo Project
+
+https://youtu.be/wAzssaMsMX4
+
 ---
 
 ## Arsitektur
