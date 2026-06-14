@@ -37,18 +37,11 @@ Kode dipisah menjadi empat lapisan:
 
 ### Flow Arsitektur
 
-```
-Client (WebSocket) --> main.py --> handlers/ --> services/ --> db.py --> postgreSQL
-```
+![Flow Arsitektur](/docs/architecture.webp)
 
 ### Skema Database
 
-```sql
-users          (id, username, password_hash, created_at)
-rooms          (id, name, owner_id, created_at)
-room_members   (id, room_id, user_id, joined_at)
-messages       (id, room_id, user_id, content, is_dm, target_user_id, created_at)
-```
+![Skema Database](/docs/db-schema.webp)
 
 Tabel `users` menyimpan akun, `rooms` untuk daftar room, `room_members` untuk keanggotaan room, dan `messages` untuk histori chat termasuk DM.
 
@@ -121,6 +114,10 @@ Semua komunikasi antara client dan server menggunakan pesan JSON melalui satu ko
 {"type": "VIDEO_SYNC", "roomId": 1, "event": "play", "videoTime": 42.5, "videoUrl": "https://..."}
 {"type": "VIDEO_STATE", "roomId": 1, "username": "user1", "event": "play", "videoTime": 42.5, "videoUrl": "https://..."}
 ```
+
+**Visualisasi Komunikasi Protokol:**
+
+![Visualisasi Komunikasi Protokol](/docs/protocol.webp)
 
 ### Pola Komunikasi
 
