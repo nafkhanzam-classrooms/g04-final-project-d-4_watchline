@@ -187,6 +187,93 @@ Data yang butuh akses cepat disimpan di memory. Data yang perlu bertahan lama (a
 
 ---
 
+## Pengujian Performa dan Beban Server
+
+Pengujian dilakukan dengan menggunakan script yang ada di dalam folder `/tests`.
+
+### Pengujian Latency
+
+Pengujian latency dilakukan untuk mengukur waktu _round-trip_ antara client dan server. Pada pengujian ini, client secara berulang mengirimkan request `ROOM_LIST` dan mengukur waktu yang dibutuhkan hingga server memberikan respons.
+
+Pengujian dilakukan sebanyak 100 iterasi. Adapun hasil dari pengujian adalah sebagai berikut:
+
+| Parameter       | Nilai   |
+| --------------- | ------- |
+| Jumlah Sampel   | 100     |
+| Rata-rata       | 0,45 ms |
+| Minimum         | 0,29 ms |
+| Maksimum        | 1,43 ms |
+| Median (P50)    | 0,38 ms |
+| P95             | 0,73 ms |
+| P99             | 0,93 ms |
+| Standar Deviasi | 0,17 ms |
+
+Hasil pengujian menunjukkan bahwa server mampu memberikan respons dengan sangat cepat. Nilai rata-rata latency sebesar 0,45 ms menunjukkan bahwa komunikasi antara client dan server berlangsung hampir tanpa jeda yang signifikan.
+
+Selain itu, nilai P95 sebesar 0,73 ms dan P99 sebesar 0,93 ms menunjukkan bahwa sebagian besar request memperoleh respons dalam waktu kurang dari 1 ms. Standar deviasi yang rendah mengindikasikan bahwa performa server relatif stabil dan konsisten selama pengujian berlangsung.
+
+### Pengujian Connection Rate
+
+Pengujian _connection rate_ dilakukan untuk mengukur kemampuan server dalam menerima koneksi baru dan melakukan proses autentikasi pengguna secara berulang dalam waktu singkat.
+
+Pada skenario ini dilakukan 200 koneksi secara berturut-turut dengan proses registrasi pengguna. Adapun hasil dari pengujian adalah sebagai berikut:
+
+| Parameter       | Nilai               |
+| --------------- | ------------------- |
+| Jumlah Koneksi  | 200                 |
+| Durasi          | 0,40 detik          |
+| Connection Rate | 496,5 koneksi/detik |
+
+Hasil pengujian menunjukkan bahwa server mampu menerima hampir 500 koneksi baru setiap detik. Nilai ini menunjukkan bahwa mekanisme asynchronous yang digunakan pada server berhasil mengurangi overhead yang umumnya muncul pada model _thread-per-client_.
+
+### Pengujian Beban
+
+Pengujian beban dilakukan untuk mengetahui kemampuan server dalam menangani banyak client yang aktif secara bersamaan.
+
+Dalam skenario ini terdapat 100 client yang bergabung ke room yang sama. Masing-masing client mengirimkan 20 pesan chat sehingga total terdapat 2.000 pesan yang harus diproses dan didistribusikan oleh server. Adapun hasil dari pengujian adalah sebagai berikut:
+
+| Parameter         | Nilai             |
+| ----------------- | ----------------- |
+| Jumlah Client     | 100               |
+| Pesan per Client  | 20                |
+| Total Pesan       | 2.000             |
+| Error             | 0                 |
+| Durasi            | 12,16 detik       |
+| Throughput        | 164,4 pesan/detik |
+| Rata-rata Latency | 16,86 ms          |
+| P50               | 2,30 ms           |
+| P95               | 28,49 ms          |
+| P99               | 981,78 ms         |
+
+Server berhasil memproses seluruh 2.000 pesan tanpa menghasilkan error. Throughput sebesar 164,4 pesan per detik menunjukkan bahwa sistem mampu menangani lalu lintas komunikasi yang cukup tinggi untuk aplikasi watch party skala kecil hingga menengah.
+
+Nilai rata-rata latency sebesar 16,86 ms masih berada pada kategori yang baik untuk aplikasi komunikasi real-time. Namun terdapat lonjakan latency pada persentil P99 yang mencapai 981,78 ms.
+
+Lonjakan tersebut terjadi karena seluruh client berada pada room yang sama sehingga setiap pesan yang diterima server harus dibroadcast ke banyak client secara bersamaan. Kondisi ini menyebabkan meningkatnya beban event loop dan proses _fan-out_ pesan pada saat lalu lintas komunikasi mencapai puncaknya.
+
+Meskipun demikian, tidak ditemukan kegagalan pengiriman pesan maupun error selama pengujian berlangsung.
+
+### Pengujian Broadcast Fan-Out
+
+Pengujian ini dilakukan untuk mengukur waktu yang dibutuhkan server dalam mendistribusikan satu pesan ke seluruh anggota room.
+
+Pada pengujian ini terdapat 50 penerima dalam satu room dan pengujian dilakukan sebanyak 10 kali. Adapun hasil dari pengujian adalah sebagai berikut:
+
+| Parameter       | Nilai   |
+| --------------- | ------- |
+| Jumlah Penerima | 50      |
+| Jumlah Putaran  | 10      |
+| Rata-rata       | 2,21 ms |
+| Minimum         | 2,04 ms |
+| Maksimum        | 2,72 ms |
+| P95             | 2,72 ms |
+
+Hasil pengujian menunjukkan bahwa server mampu mendistribusikan satu pesan ke 50 client hanya dalam waktu rata-rata 2,21 ms. Nilai ini menunjukkan bahwa mekanisme broadcast yang diterapkan sangat efisien untuk kebutuhan aplikasi komunikasi real-time.
+
+Perbedaan antara nilai minimum dan maksimum relatif kecil sehingga dapat disimpulkan bahwa performa distribusi pesan cukup stabil meskipun jumlah penerima cukup banyak.
+
+---
+
 ## Kendala dan Solusi
 
 ### Kendala
