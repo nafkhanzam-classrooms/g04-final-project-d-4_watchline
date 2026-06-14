@@ -1,0 +1,41 @@
+{
+  "server": "ws://localhost:8080",
+  "timestamp": "2026-06-14T09:09:40",
+  "results": {
+    "latency": {
+      "samples": 100,
+      "avg_ms": 0.45,
+      "min_ms": 0.29,
+      "max_ms": 1.43,
+      "p50_ms": 0.38,
+      "p95_ms": 0.73,
+      "p99_ms": 0.93,
+      "stdev_ms": 0.17
+    },
+    "connection_rate": {
+      "connections": 200,
+      "duration_s": 0.4,
+      "connections_per_s": 496.5
+    },
+    "load": {
+      "clients": 100,
+      "messages_per_client": 20,
+      "total_messages": 2000,
+      "errors": 0,
+      "duration_s": 12.16,
+      "throughput_msg_per_s": 164.4,
+      "avg_ms": 16.86,
+      "p50_ms": 2.3,
+      "p95_ms": 28.49,
+      "p99_ms": 981.78
+    },
+    "broadcast": {
+      "receivers": 50,
+      "rounds": 10,
+      "avg_ms": 2.21,
+      "min_ms": 2.04,
+      "max_ms": 2.72,
+      "p95_ms": 2.72
+    }
+  }
+}
