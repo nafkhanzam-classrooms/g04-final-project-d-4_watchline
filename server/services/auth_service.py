@@ -44,3 +44,7 @@ def create_token(user_id, username):
 
 def validate_token(token):
     return _sessions.get(token)
+
+
+def revoke_token(token):
+    _sessions.pop(token, None)

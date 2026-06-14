@@ -35,3 +35,11 @@ async def handle(ws, msg, client, send):
             await send(ws, {"type": "AUTH_OK", "token": msg.get("token"), "username": session["username"]})
         else:
             await send(ws, {"type": "AUTH_FAIL", "message": "Invalid or expired token"})
+
+    elif msg_type == "LOGOUT":
+        if client.get("user_id"):
+            auth_service.revoke_token(msg.get("token"))
+            logger.log("LOGOUT", client["user_id"], client["username"])
+            client["user_id"] = None
+            client["username"] = None
+        await send(ws, {"type": "LOGOUT_OK"})

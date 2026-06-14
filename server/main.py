@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 # All connected clients: {ws: {user_id, username}}
 clients = {}
 
-AUTH_TYPES = {"REGISTER", "LOGIN", "RECONNECT"}
+AUTH_TYPES = {"REGISTER", "LOGIN", "RECONNECT", "LOGOUT"}
 ROOM_TYPES = {"ROOM_CREATE", "ROOM_JOIN", "ROOM_LEAVE", "ROOM_LIST", "ROOM_MEMBERS"}
 CHAT_TYPES = {"CHAT_SEND", "CHAT_DM"}
 
