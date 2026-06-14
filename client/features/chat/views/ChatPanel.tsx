@@ -230,7 +230,7 @@ export function ChatPanel({
                       minute: "2-digit",
                     })}
                   </time>
-                  {tab === "dm" && !ownMessage && (
+                  {/* {tab === "dm" && !ownMessage && (
                     <button
                       className="ml-auto border-0 bg-transparent p-0 text-xs font-semibold text-accent hover:text-[#ff8177]"
                       onClick={() => {
@@ -241,7 +241,7 @@ export function ChatPanel({
                     >
                       Balas
                     </button>
-                  )}
+                  )} */}
                 </div>
                 <p className={`mt-2 inline-block max-w-[90%] px-3 py-2 text-xs leading-relaxed ${ownMessage ? "rounded-[8px_2px_8px_8px] bg-accent/11 text-left text-[#e0c0bd]" : "rounded-[2px_8px_8px_8px] bg-panel-soft text-[#aaa9b1]"}`}>
                   {message.content}
