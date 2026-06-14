@@ -327,3 +327,48 @@ Server mendeteksi sertifikat di `server/certs/` secara otomatis dan mengaktifkan
 | `DB_PASS`     | `watchline`        | Password database    |
 | `TLS_CERT`    | `certs/server.crt` | Path sertifikat TLS  |
 | `TLS_KEY`     | `certs/server.key` | Path private key TLS |
+
+---
+
+## Deployment
+
+### Arsitektur Deployment
+
+Aplikasi di-deploy menggunakan kombinasi **Docker**, **Nginx**, dan **Tailscale Funnel** untuk mengekspos layanan ke internet publik tanpa memerlukan IP publik atau port forwarding.
+
+```
+Internet (HTTPS)
+       │
+       ▼
+┌─────────────────┐
+│ Tailscale Funnel│  ← Mengekspos node ke internet via domain *.ts.net
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│     Nginx       │  ← Reverse proxy: routing & upgrade WebSocket
+│  (Port 443/80)  │
+└────────┬────────┘
+         │
+    ┌────┴─────┐
+    ▼          ▼
+┌────────┐ ┌────────┐
+│ Client │ │ Server │  ← Docker containers
+│ :3000  │ │ :8080  │
+└────────┘ └────────┘
+               │
+               ▼
+         ┌──────────┐
+         │ Postgres │
+         │  :5432   │
+         └──────────┘
+```
+
+### Teknologi yang Digunakan
+
+| Teknologi            | Fungsi                                                                                          |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| **Docker Compose**   | Menjalankan seluruh stack (client, server, database) dalam container terisolasi                 |
+| **Nginx**            | Reverse proxy yang mengarahkan request ke container yang sesuai dan menangani upgrade WebSocket |
+| **Tailscale**        | Membuat jaringan mesh VPN untuk menghubungkan node tanpa konfigurasi firewall                   |
+| **Tailscale Funnel** | Mengekspos layanan lokal ke internet publik melalui domain `*.ts.net` dengan HTTPS otomatis     |
