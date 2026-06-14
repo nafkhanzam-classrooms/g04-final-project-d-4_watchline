@@ -183,7 +183,7 @@ Oleh karena itu:
 | Member online di room  | Dict `_members` (in-memory)  | Hilang saat server mati           |
 | Users, rooms, messages | PostgreSQL                   | Persisten walaupun server restart |
 
-Data yang butuh akses cepat disimpan di memory. Data yang perlu bertahan lama (akun, histori chat) disimpan di database.
+Dataa yang butuh akses cepat disimpan di memory. Data yang perlu bertahan lama (akun, histori chat) disimpan di database.
 
 ---
 
