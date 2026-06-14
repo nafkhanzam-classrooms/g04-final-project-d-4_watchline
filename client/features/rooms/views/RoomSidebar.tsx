@@ -5,7 +5,6 @@ import {
   ChevronRight,
   LogOut,
   Plus,
-  RefreshCw,
   Search,
   Users,
   X,
@@ -20,7 +19,6 @@ type Props = {
   error: string;
   onCreate: (name: string) => void;
   onJoin: (room: Room) => void;
-  onRefresh: () => void;
   onLogout: () => void;
 };
 
@@ -31,7 +29,6 @@ export function RoomSidebar({
   error,
   onCreate,
   onJoin,
-  onRefresh,
   onLogout,
 }: Props) {
   const [query, setQuery] = useState("");
@@ -74,15 +71,6 @@ export function RoomSidebar({
             Ruang Nonton
           </h2>
         </div>
-
-        <button
-          className="group flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/3 text-[#a1a1aa] transition hover:border-accent/40 hover:bg-accent/10 hover:text-accent max-md:mx-auto"
-          onClick={onRefresh}
-          title="Muat ulang"
-          type="button"
-        >
-          <RefreshCw size={16} className="transition group-hover:rotate-180" />
-        </button>
       </div>
 
       {/* Search */}

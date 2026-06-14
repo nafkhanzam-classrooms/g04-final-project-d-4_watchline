@@ -29,6 +29,8 @@ export function useRooms({
 
   useEffect(() => {
     refresh();
+    const timer = setInterval(refresh, 3000);
+    return () => clearInterval(timer);
   }, [refresh]);
 
   useEffect(

@@ -55,7 +55,6 @@ export function DashboardView({
         onCreate={rooms.createRoom}
         onJoin={(room) => router.push(`/rooms/${room.id}`)}
         onLogout={handleLogout}
-        onRefresh={rooms.refresh}
         rooms={rooms.rooms}
         user={user}
       />
