@@ -278,11 +278,13 @@ Perbedaan antara nilai minimum dan maksimum relatif kecil sehingga dapat disimpu
 
 ### Kendala
 
-Kami sebelumnya menggunakan library socket. Namun, saat mengintegrasikannya dengan frontend, jaringan tidak dapat terhubung
+Awalnya, kami menggunakan sistem TCP Socket biasa. Namun, pendekatan tersebut tidak dapat digunakan secara langsung pada browser karena browser tidak menyediakan akses ke raw TCP socket.
 
 ### Solusi
 
-Solusinya adalah menggunakan library WebSocket untuk mengintegrasikan socket untuk platform **web**
+Untuk mengatasi permasalahan tersebut, kami menggunakan library WebSocket sebagai media komunikasi antara server dan client untuk platform **web**.
+
+Sebagai tambahan, WebSocket tetap menggunakan koneksi TCP di lapisan transport namun menyediakan API yang didukung secara native oleh browser.
 
 ---
 
