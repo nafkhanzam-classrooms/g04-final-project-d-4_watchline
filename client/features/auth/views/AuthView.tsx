@@ -48,7 +48,7 @@ export function AuthView({ mode }: Props) {
         <div className="max-md:text-center">
           <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-accent max-md:justify-center">
             <Radio size={15} />
-            Ruang nonton real-time
+            Ruang nonton bareng
           </p>
           <h1 className="mt-6 mb-6 max-w-[720px] text-[clamp(44px,5vw,64px)] font-bold leading-[1.12] tracking-[-0.04em] max-[560px]:text-[40px]">
             Nonton bareng,
@@ -62,7 +62,7 @@ export function AuthView({ mode }: Props) {
 
           <div className="mt-12 flex gap-8 max-[1050px]:flex-col max-[1050px]:items-start max-[1050px]:gap-4 max-md:flex-row max-md:flex-wrap max-md:items-center max-md:justify-center max-[560px]:grid max-[560px]:grid-cols-1 max-[560px]:gap-3 max-[560px]:mt-9 max-[560px]:text-left">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-accent/22 bg-accent/10 text-accent">
+              <span className="flex h-10 w-15 items-center justify-center rounded-xl border border-accent/22 bg-accent/10 text-accent">
                 <Film size={20} />
               </span>
               <div className="flex flex-col gap-1">
@@ -71,7 +71,7 @@ export function AuthView({ mode }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-accent/22 bg-accent/10 text-accent">
+              <span className="flex h-10 w-15 items-center justify-center rounded-xl border border-accent/22 bg-accent/10 text-accent">
                 <MessageCircle size={20} />
               </span>
               <div className="flex flex-col gap-1">
@@ -80,7 +80,7 @@ export function AuthView({ mode }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-accent/22 bg-accent/10 text-accent">
+              <span className="flex h-10 w-15 items-center justify-center rounded-xl border border-accent/22 bg-accent/10 text-accent">
                 <Users size={20} />
               </span>
               <div className="flex flex-col gap-1">
@@ -166,14 +166,9 @@ export function AuthView({ mode }: Props) {
                 {!loading && <ArrowRight size={17} />}
               </button>
             </form>
-            <p className="mt-4 text-center text-xs text-[#5f5f69]">
-              Dengan melanjutkan, kamu siap untuk movie night yang lebih rapi.
-            </p>
+           
           </div>
-          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-[#696973]">
-            <span className="h-1.5 w-1.5 rounded-full bg-green shadow-[0_0_0_4px_rgba(102,209,158,0.1)]" />
-            Dibangun untuk percakapan yang benar-benar real-time
-          </div>
+          
         </div>
       </section>
     </main>

@@ -40,12 +40,7 @@ export function WatchPartyView({ room, members, onLeave }: Props) {
     <section className="min-w-0 overflow-y-auto bg-[radial-gradient(circle_at_50%_35%,rgba(255,91,77,0.04),transparent_35%),#0d0d11] p-8 scrollbar-none max-[560px]:px-3 max-[560px]:py-5">
       <header className="flex items-center justify-between gap-6 max-[560px]:flex-col max-[560px]:items-start">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-green">
-            <span className="h-1.5 w-1.5 rounded-full bg-green shadow-[0_0_0_4px_rgba(102,209,158,0.1)]" />
-            LIVE ROOM
-          </div>
-          <h1 className="mt-2 mb-1 text-[40px] font-bold leading-[1.25] tracking-tight max-[560px]:text-2xl">{room.name}</h1>
-          <p className="m-0 text-base text-[#74747f]">Room #{room.id} · Semua kontrol video akan disinkronkan</p>
+          <h1 className="mt-2 mb-1 text-[40px] font-bold tracking-tight max-[560px]:text-2xl">{room.name}</h1>
         </div>
         <div className="flex items-center gap-3 max-[560px]:flex-wrap">
           <div className="flex">
@@ -73,10 +68,9 @@ export function WatchPartyView({ room, members, onLeave }: Props) {
           </div>
           {!videoId && (
             <div className="absolute left-1/2 top-1/2 z-2 w-[80%] max-w-[432px] -translate-x-1/2 -translate-y-1/2 text-center">
-              <span className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-accent pl-1 text-white shadow-[0_0_0_12px_rgba(255,91,77,0.08)]">
+              {/* <span className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-accent pl-1 text-white shadow-[0_0_0_12px_rgba(255,91,77,0.08)]">
                 <Play size={30} fill="currentColor" />
-              </span>
-              <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-accent">Ready when you are</p>
+              </span> */}
               <h2 className="mx-auto mt-2 mb-3 max-w-[400px] text-[clamp(20px,2.4vw,28px)] font-semibold leading-[1.4] text-wrap-balance">Tambahkan video YouTube untuk mulai menonton.</h2>
             </div>
           )}

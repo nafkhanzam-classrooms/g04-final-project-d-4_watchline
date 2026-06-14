@@ -48,7 +48,7 @@ export function DashboardView({
   };
 
   return (
-    <main className="grid h-screen overflow-hidden grid-cols-[272px_minmax(0,1fr)_328px] max-[1050px]:grid-cols-[232px_minmax(0,1fr)_288px] max-md:grid-cols-[88px_minmax(0,1fr)] max-[560px]:grid-cols-[72px_minmax(0,1fr)]">
+    <main className="grid h-screen overflow-hidden grid-cols-[288px_minmax(0,1fr)_320px] max-[1100px]:grid-cols-[240px_minmax(0,1fr)_288px] max-md:grid-cols-[80px_minmax(0,1fr)]">
       <RoomSidebar
         activeRoom={rooms.activeRoom}
         error={rooms.error}
@@ -66,7 +66,7 @@ export function DashboardView({
             onLeave={rooms.leaveRoom}
             room={rooms.activeRoom}
           />
-          <div className="max-md:hidden">
+          <div className="h-full min-h-0 max-md:hidden">
             <ChatPanel
               currentUser={user}
               directMessages={chat.directMessages}

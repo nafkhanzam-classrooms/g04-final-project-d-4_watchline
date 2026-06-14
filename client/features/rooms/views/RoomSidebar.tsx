@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ChevronRight,
   LogOut,
@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Search,
   Users,
+  X,
 } from "lucide-react";
 import type { Room, User } from "@/shared/types/protocol";
 import { Brand } from "@/shared/components/Brand";
@@ -36,125 +37,206 @@ export function RoomSidebar({
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const [roomName, setRoomName] = useState("");
-  const visibleRooms = rooms.filter((room) =>
-    room.name.toLowerCase().includes(query.toLowerCase()),
+
+  const visibleRooms = useMemo(
+    () =>
+      rooms.filter((room) =>
+        room.name.toLowerCase().includes(query.toLowerCase()),
+      ),
+    [rooms, query],
   );
 
   const submitRoom = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!roomName.trim()) return;
-    onCreate(roomName);
+
+    const cleanRoomName = roomName.trim();
+    if (!cleanRoomName) return;
+
+    onCreate(cleanRoomName);
     setRoomName("");
     setCreating(false);
   };
 
   return (
-    <aside className="flex min-h-0 flex-col border-r border-line bg-[#111116] px-4 py-6 max-md:px-2 max-[560px]:px-2">
+    <aside className="flex h-full min-h-0 min-w-0 flex-col border-r border-white/8 bg-[#0d0d12]/95 px-4 py-5 shadow-2xl shadow-black/20 backdrop-blur-xl max-md:px-2">
       {/* Brand */}
-      <div className="-mx-4 mb-6 border-b border-line px-4 pb-5 max-md:-mx-2 max-md:px-3">
+      <div className="-mx-4 mb-5 border-b border-white/8 px-4 pb-5 max-md:-mx-2 max-md:px-2">
         <Brand compact />
       </div>
 
-      {/* Heading */}
-      <div className="flex items-center justify-between">
-        <div className="max-md:hidden">
-          <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-accent">Browse</p>
-          <h2 className="mt-1 text-xl font-semibold">Ruang nonton</h2>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 max-md:hidden">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">
+            Watchline
+          </p>
+          <h2 className="mt-1 truncate text-xl font-semibold text-white">
+            Ruang Nonton
+          </h2>
         </div>
+
         <button
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-transparent text-muted max-md:mx-auto"
+          className="group flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/3 text-[#a1a1aa] transition hover:border-accent/40 hover:bg-accent/10 hover:text-accent max-md:mx-auto"
           onClick={onRefresh}
           title="Muat ulang"
           type="button"
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={16} className="transition group-hover:rotate-180" />
         </button>
       </div>
 
       {/* Search */}
-      <div className="mt-5 flex items-center gap-2 rounded-lg border border-line bg-[#18181e] px-3 text-[#696974] max-md:justify-center max-md:p-3">
-        <Search size={16} />
+      <div className="mt-5 flex items-center gap-2 rounded-2xl border border-white/8 bg-white/4 px-3 text-[#71717a] transition focus-within:border-accent/50 focus-within:bg-white/6 max-md:justify-center max-md:px-0">
+        <Search size={16} className="shrink-0" />
         <input
-          className="w-full border-0 bg-transparent py-3 text-xs outline-none max-md:hidden"
+          className="w-full border-0 bg-transparent py-3 text-sm text-white outline-none placeholder:text-[#62626c] max-md:hidden"
           aria-label="Cari room"
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Cari room..."
+          placeholder="Cari ruang nonton..."
           value={query}
         />
       </div>
 
-      {/* Create */}
+      {/* Create Button */}
       <button
-        className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-dashed border-accent/40 bg-accent/9 p-3 text-xs font-semibold text-[#ff8177] max-md:p-3"
+        className="mt-3 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-accent/35 bg-accent/8 p-3 text-sm font-semibold text-[#ff8177] transition hover:border-accent/70 hover:bg-accent/15 hover:text-[#ff9a92] max-md:p-3"
         onClick={() => setCreating((value) => !value)}
         type="button"
       >
-        <Plus size={17} />
-        <span className="max-md:hidden">Buat ruang baru</span>
+        {creating ? <X size={17} /> : <Plus size={17} />}
+        <span className="max-md:hidden">
+          {creating ? "Batal membuat ruang" : "Buat ruang baru"}
+        </span>
       </button>
 
+      {/* Create Form */}
       {creating && (
-        <form className="mt-2 flex gap-2" onSubmit={submitRoom}>
+        <form
+          className="mt-3 overflow-hidden rounded-2xl border border-white/8 bg-white/3.5 p-2 max-md:hidden"
+          onSubmit={submitRoom}
+        >
           <input
-            className="min-w-0 flex-1 rounded-lg border border-line bg-[#101015] px-3 py-2 text-xs outline-none placeholder:text-[#555560] focus:border-accent/65 focus:shadow-[0_0_0_3px_rgba(255,91,77,0.09)]"
+            className="mb-2 w-full rounded-xl border border-white/8 bg-[#0b0b10] px-3 py-2.5 text-sm text-white outline-none placeholder:text-[#555560] focus:border-accent/60 focus:shadow-[0_0_0_3px_rgba(255,91,77,0.10)]"
             aria-label="Nama room baru"
             autoFocus
             onChange={(event) => setRoomName(event.target.value)}
-            placeholder="Friday movie night"
+            placeholder="Contoh: Friday Movie Night"
             value={roomName}
           />
-          <button className="rounded-lg border-0 bg-accent px-3 text-xs font-semibold text-white" type="submit">Buat</button>
+
+          <button
+            className="w-full rounded-xl border-0 bg-accent px-3 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 active:scale-[0.98]"
+            type="submit"
+          >
+            Buat Room
+          </button>
         </form>
       )}
 
-      {error && <p className="mt-2 rounded border border-accent/20 bg-accent/9 px-3 py-2 text-xs text-[#ff8d83]">{error}</p>}
-
-      {/* Room list */}
-      <div className="-mx-1 mt-6 flex-1 overflow-y-auto px-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#656570] max-md:hidden">
-          Tersedia <span className="ml-1 rounded-full bg-[#202027] px-2 py-1">{visibleRooms.length}</span>
+      {/* Error */}
+      {error && (
+        <p className="mt-3 rounded-2xl border border-accent/20 bg-accent/8 px-3 py-2.5 text-xs leading-relaxed text-[#ff9a92] max-md:hidden">
+          {error}
         </p>
+      )}
+
+      {/* Room List */}
+      <div className="scrollbar-none -mx-1 mt-6 min-h-0 flex-1 overflow-y-auto px-1">
+        <div className="mb-3 flex items-center justify-between max-md:hidden">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#696974]">
+            Tersedia
+          </p>
+          <span className="rounded-full border border-white/8 bg-white/4 px-2.5 py-1 text-xs font-semibold text-[#d4d4d8]">
+            {visibleRooms.length}
+          </span>
+        </div>
+
         {visibleRooms.length === 0 ? (
-          <div className="px-4 py-9 text-center text-[#656570]">
-            <Users size={22} />
-            <p className="mt-3 text-xs text-[#a1a0a8]">Belum ada room.</p>
-            <small className="text-xs leading-relaxed">Buat ruang pertama dan undang temanmu.</small>
+          <div className="flex flex-col items-center rounded-2xl border border-white/8 bg-white/2.5 px-4 py-10 text-center max-md:border-0 max-md:bg-transparent max-md:px-0">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/5 text-[#71717a]">
+              <Users size={22} />
+            </div>
+
+            <p className="mt-3 text-sm font-semibold text-[#d4d4d8] max-md:hidden">
+              Belum ada ruang
+            </p>
+            <small className="mt-1 text-xs leading-relaxed text-[#71717a] max-md:hidden">
+              Buat ruang pertama dan mulai nonton bareng temanmu.
+            </small>
           </div>
         ) : (
-          visibleRooms.map((room) => (
-            <button
-              className={`mb-1 flex w-full items-center gap-3 rounded-lg border-0 p-3 text-left max-md:justify-center max-md:p-2 ${
-                activeRoom?.id === room.id
-                  ? "bg-accent text-white"
-                  : "bg-transparent hover:bg-[#1c1c23]"
-              }`}
-              key={room.id}
-              onClick={() => onJoin(room)}
-              type="button"
-            >
-              <span className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold ${activeRoom?.id === room.id ? "bg-white/18 text-white" : "bg-[#292932] text-[#d8d7dc]"}`}>
-                {room.name.slice(0, 2).toUpperCase()}
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-1 max-md:hidden">
-                <strong className="truncate text-xs">{room.name}</strong>
-              </span>
-              <ChevronRight size={15} className={`max-md:hidden ${activeRoom?.id === room.id ? "text-white/80" : "text-[#50505a]"}`} />
-            </button>
-          ))
+          <div className="space-y-2">
+            {visibleRooms.map((room) => {
+              const isActive = activeRoom?.id === room.id;
+
+              return (
+                <button
+                  className={`group flex w-full min-w-0 items-center gap-3 rounded-xl border-0 p-2.5 text-left transition max-md:justify-center max-md:p-2 ${
+                    isActive
+                      ? "bg-orange-300/10 text-white"
+                      : "text-[#d8d7dc] hover:bg-white/5.5"
+                  }`}
+                  key={room.id}
+                  onClick={() => onJoin(room)}
+                  type="button"
+                >
+          
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5 max-md:hidden">
+                    <strong className="truncate text-sm font-semibold">
+                      {room.name}
+                    </strong>
+                  
+                  </span>
+
+                  <ChevronRight
+                    size={16}
+                    className={`max-md:hidden ${
+                      isActive
+                        ? "text-white/80"
+                        : "text-[#52525b] transition group-hover:translate-x-0.5 group-hover:text-[#a1a1aa]"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
 
       {/* User */}
-      <div className="-mx-4 mt-3 flex items-center gap-3 border-t border-line px-4 pt-4 max-md:-mx-2 max-md:justify-center max-md:px-2">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#292932] text-xs font-semibold text-[#d8d7dc]">
-          {user.username.slice(0, 2).toUpperCase()}
-        </span>
-        <span className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden max-md:hidden">
-          <strong className="block w-full truncate text-sm font-semibold leading-5 text-[#f4f4f5]" title={user.username}>{user.username}</strong>
-          <small className="text-xs leading-4 text-green">Online</small>
-        </span>
+      <div className="-mx-4 mt-4 shrink-0 border-t border-white/8 px-4 pt-4 max-md:-mx-2 max-md:px-2">
+        <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3.5 p-2.5 max-md:justify-center max-md:border-0 max-md:bg-transparent max-md:p-0">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/8 text-xs font-bold text-[#e4e4e7]">
+            {user.username.slice(0, 2).toUpperCase()}
+          </span>
+
+          <span className="flex min-w-0 flex-1 flex-col overflow-hidden max-md:hidden">
+            <strong
+              className="block truncate text-sm font-semibold leading-5 text-white"
+              title={user.username}
+            >
+              {user.username}
+            </strong>
+
+            <small className="flex items-center gap-1.5 text-xs leading-4 text-green">
+              <span className="h-1.5 w-1.5 rounded-full bg-green" />
+              Online
+            </small>
+          </span>
+
+          <button
+            className="flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 transition hover:bg-red-500 hover:text-white max-md:hidden"
+            aria-label="Keluar dari akun"
+            onClick={onLogout}
+            title="Keluar"
+            type="button"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
+
         <button
-          className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border-0 bg-[#dc2626] p-2 text-white hover:bg-[#ef4444]"
+          className="mt-2 hidden h-9 w-full items-center justify-center rounded-xl bg-red-500/10 text-red-300 transition hover:bg-red-500 hover:text-white max-md:flex"
           aria-label="Keluar dari akun"
           onClick={onLogout}
           title="Keluar"

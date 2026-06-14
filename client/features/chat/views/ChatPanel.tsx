@@ -30,6 +30,8 @@ export function ChatPanel({
   const [tab, setTab] = useState<"room" | "dm">("room");
   const [content, setContent] = useState("");
   const [target, setTarget] = useState("");
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const targetSuggestions = useMemo(() => {
     const query = target.trim().toLowerCase();
@@ -44,6 +46,11 @@ export function ChatPanel({
       )
       .slice(0, 6);
   }, [currentUser.username, members, target]);
+  const visibleSuggestions = suggestionsOpen ? targetSuggestions : [];
+  const selectedSuggestionIndex = Math.min(
+    activeSuggestion,
+    Math.max(visibleSuggestions.length - 1, 0),
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -53,7 +60,18 @@ export function ChatPanel({
     const latestMessage = directMessages.at(-1);
     if (!latestMessage || latestMessage.from === currentUser.username) return;
     setTarget(latestMessage.from);
+    setSuggestionsOpen(false);
   }, [currentUser.username, directMessages]);
+
+  useEffect(() => {
+    setActiveSuggestion(0);
+  }, [target]);
+
+  const selectTarget = (username: string) => {
+    setTarget(username);
+    setSuggestionsOpen(false);
+    setActiveSuggestion(0);
+  };
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -66,12 +84,11 @@ export function ChatPanel({
   const displayedMessages = tab === "room" ? messages : directMessages;
 
   return (
-    <aside className="flex min-h-0 flex-col bg-[#111116]">
+    <aside className="flex h-full min-h-0 flex-col bg-[#111116]">
       {/* Top */}
       <div className="flex items-center justify-between border-b border-line px-5 pb-4 pt-6">
         <div>
-          <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-accent">Percakapan</p>
-          <h3 className="mt-1 text-base font-semibold">{tab === "room" ? roomName : "Direct message"}</h3>
+          <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-accent">Chat Room</p>
         </div>
         <span className="flex items-center gap-1 rounded-full bg-[#1e1e25] px-3 py-2 text-xs text-[#888892]">
           <Users size={14} />
@@ -95,7 +112,7 @@ export function ChatPanel({
             const latestIncoming = [...directMessages]
               .reverse()
               .find((message) => message.from !== currentUser.username);
-            if (latestIncoming) setTarget(latestIncoming.from);
+            if (latestIncoming) selectTarget(latestIncoming.from);
             setTab("dm");
           }}
           type="button"
@@ -114,21 +131,61 @@ export function ChatPanel({
             className="w-full rounded-lg border border-line bg-[#101015] px-3 py-2 text-xs outline-none placeholder:text-[#555560] focus:border-accent/65 focus:shadow-[0_0_0_3px_rgba(255,91,77,0.09)]"
             autoComplete="off"
             aria-label="Username penerima"
-            onChange={(event) => setTarget(event.target.value)}
+            aria-activedescendant={
+              visibleSuggestions.length > 0
+                ? `username-suggestion-${selectedSuggestionIndex}`
+                : undefined
+            }
+            aria-autocomplete="list"
+            aria-expanded={visibleSuggestions.length > 0}
+            onChange={(event) => {
+              setTarget(event.target.value);
+              setSuggestionsOpen(true);
+            }}
+            onFocus={() => setSuggestionsOpen(true)}
+            onKeyDown={(event) => {
+              if (visibleSuggestions.length === 0) return;
+
+              if (event.key === "ArrowDown") {
+                event.preventDefault();
+                setActiveSuggestion(
+                  (current) => (current + 1) % visibleSuggestions.length,
+                );
+              } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                setActiveSuggestion(
+                  (current) =>
+                    (current - 1 + visibleSuggestions.length) %
+                    visibleSuggestions.length,
+                );
+              } else if (event.key === "Enter") {
+                event.preventDefault();
+                selectTarget(visibleSuggestions[selectedSuggestionIndex]);
+              } else if (event.key === "Escape") {
+                setSuggestionsOpen(false);
+              }
+            }}
             placeholder="username tujuan"
             value={target}
           />
-          {targetSuggestions.length > 0 && (
+          {visibleSuggestions.length > 0 && (
             <div
               aria-label="Saran username"
-              className="absolute left-9 right-3 top-[calc(100%-4px)] z-10 flex flex-col gap-1 rounded-lg border border-line bg-[#18181e] p-2 shadow-[0_16px_32px_rgba(0,0,0,0.32)]"
+              className="absolute left-9 right-3 top-[calc(100%+4px)] z-10 flex flex-col gap-1 rounded-lg border border-line bg-[#18181e] p-2 shadow-[0_16px_32px_rgba(0,0,0,0.32)]"
               role="listbox"
             >
-              {targetSuggestions.map((member) => (
+              {visibleSuggestions.map((member, index) => (
                 <button
-                  className="flex w-full items-center gap-3 rounded-lg border-0 bg-transparent p-2 text-left hover:bg-accent/12"
+                  aria-selected={index === selectedSuggestionIndex}
+                  className={`flex w-full items-center gap-3 rounded-lg border-0 p-2 text-left ${
+                    index === selectedSuggestionIndex
+                      ? "bg-accent/16"
+                      : "bg-transparent hover:bg-accent/12"
+                  }`}
+                  id={`username-suggestion-${index}`}
                   key={member}
-                  onClick={() => setTarget(member)}
+                  onClick={() => selectTarget(member)}
+                  onMouseDown={(event) => event.preventDefault()}
                   role="option"
                   type="button"
                 >
@@ -142,9 +199,9 @@ export function ChatPanel({
       )}
 
       {/* Messages */}
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto p-4">
         {displayedMessages.length === 0 ? (
-          <div className="mx-auto mt-[45%] max-w-[208px] text-center text-[#666671]">
+          <div className="mx-auto mt-[45%] max-w-52 text-center text-[#666671]">
             <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#1d1d24]">
               <MessageSquare size={21} />
             </span>
@@ -177,7 +234,7 @@ export function ChatPanel({
                     <button
                       className="ml-auto border-0 bg-transparent p-0 text-xs font-semibold text-accent hover:text-[#ff8177]"
                       onClick={() => {
-                        setTarget(sender);
+                        selectTarget(sender);
                         setTab("dm");
                       }}
                       type="button"
