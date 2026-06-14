@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Play, Radio, Users } from "lucide-react";
+import { Link2, Play, Users } from "lucide-react";
 import { useWatchParty } from "@/features/watch-party/hooks/useWatchParty";
 import type { Room } from "@/shared/types/protocol";
 
@@ -16,7 +16,6 @@ export function WatchPartyView({ room, members, onLeave }: Props) {
     playerElementId,
     videoId,
     isPlayerReady,
-    lastSync,
     changeVideo,
   } = useWatchParty(room.id);
   const [urlInput, setUrlInput] = useState("");
@@ -80,16 +79,8 @@ export function WatchPartyView({ room, members, onLeave }: Props) {
               </span>
               <p className="mini-label">Ready when you are</p>
               <h2>Tambahkan video YouTube untuk mulai menonton.</h2>
-              <p>
-                Tempel link YouTube, Shorts, atau video ID. Kontrol player akan
-                disinkronkan ke semua anggota room.
-              </p>
             </div>
           )}
-          <div className="video-status">
-            <Radio size={13} />
-            {isPlayerReady ? "Sinkronisasi aktif" : "Memuat YouTube Player"}
-          </div>
         </div>
         <form className="video-url-form" onSubmit={submitUrl}>
           <Link2 size={17} />
@@ -105,20 +96,6 @@ export function WatchPartyView({ room, members, onLeave }: Props) {
           </button>
         </form>
         {urlError && <p className="video-url-error">{urlError}</p>}
-      </div>
-      <div className="watch-info-row">
-        <div className="sync-note">
-          <span><Radio size={16} /></span>
-          <div>
-            <strong>Kontrol bersama</strong>
-            <small>
-              {lastSync ?? "Play, pause, dan seek akan muncul di semua layar."}
-            </small>
-          </div>
-        </div>
-        <p>
-          Tips: gunakan koneksi stabil untuk pengalaman sinkron terbaik.
-        </p>
       </div>
     </section>
   );

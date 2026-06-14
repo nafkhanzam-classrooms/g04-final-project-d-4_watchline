@@ -117,12 +117,9 @@ export function RoomSidebar({
               onClick={() => onJoin(room)}
               type="button"
             >
-              <span className="room-monogram">
-                {room.name.slice(0, 1).toUpperCase()}
-              </span>
+         
               <span className="room-meta">
                 <strong>{room.name}</strong>
-                <small>Room #{room.id}</small>
               </span>
               <ChevronRight size={15} />
             </button>
@@ -134,10 +131,15 @@ export function RoomSidebar({
           {user.username.slice(0, 2).toUpperCase()}
         </span>
         <span>
-          <strong>{user.username}</strong>
+          <strong title={user.username}>{user.username}</strong>
           <small>Online</small>
         </span>
-        <button onClick={onLogout} title="Keluar" type="button">
+        <button
+          aria-label="Keluar dari akun"
+          onClick={onLogout}
+          title="Keluar"
+          type="button"
+        >
           <LogOut size={16} />
         </button>
       </div>
