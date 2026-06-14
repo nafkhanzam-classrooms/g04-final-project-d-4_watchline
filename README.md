@@ -67,44 +67,59 @@ Semua komunikasi antara client dan server menggunakan pesan JSON melalui satu ko
 **Autentikasi:**
 
 ```json
-→ {"type": "REGISTER", "username": "user1", "password": "pass123"}
-← {"type": "AUTH_OK", "token": "abc123...", "username": "user1"}
+{"type": "REGISTER", "username": "user1", "password": "pass123"}
+{"type": "AUTH_OK", "token": "abc123...", "username": "user1"}
+```
 
-→ {"type": "LOGIN", "username": "user1", "password": "pass123"}
-← {"type": "AUTH_OK", "token": "abc123...", "username": "user1"}
+```json
+{"type": "LOGIN", "username": "user1", "password": "pass123"}
+{"type": "AUTH_OK", "token": "abc123...", "username": "user1"}
+```
 
-→ {"type": "RECONNECT", "token": "abc123..."}
-← {"type": "AUTH_OK", "token": "abc123...", "username": "user1"}
+```json
+{"type": "LOGOUT", "token": "abc123..."}
+{"type": "LOGOUT_OK"}
+```
+
+```json
+{"type": "RECONNECT", "token": "abc123..."}
+{"type": "AUTH_OK", "token": "abc123...", "username": "user1"}
 ```
 
 **Manajemen Room:**
 
 ```json
-→ {"type": "ROOM_CREATE", "name": "movie-night"}
-← {"type": "ROOM_CREATE", "room_id": 1, "name": "movie-night"}
+{"type": "ROOM_CREATE", "name": "movie-night"}
+{"type": "ROOM_CREATE", "room_id": 1, "name": "movie-night"}
+```
 
-→ {"type": "ROOM_JOIN", "roomId": 1}
-← {"type": "ROOM_JOIN", "roomId": 1}
+```json
+{"type": "ROOM_JOIN", "roomId": 1}
+{"type": "ROOM_JOIN", "roomId": 1}
+```
 
-→ {"type": "ROOM_LIST"}
-← {"type": "ROOM_LIST_RESP", "rooms": [{"id": 1, "name": "movie-night", "owner_id": 1}]}
+```json
+{"type": "ROOM_LIST"}
+{"type": "ROOM_LIST_RESP", "rooms": [{"id": 1, "name": "movie-night", "owner_id": 1}]}
 ```
 
 **Chat:**
 
 ```json
-→ {"type": "CHAT_SEND", "roomId": 1, "content": "Hello!"}
-← {"type": "CHAT_MSG", "roomId": 1, "username": "user1", "content": "Hello!"}  // broadcast ke semua member
+{"type": "CHAT_SEND", "roomId": 1, "content": "Hello!"}
+{"type": "CHAT_MSG", "roomId": 1, "username": "user1", "content": "Hello!"}  // broadcast ke semua member
+```
 
-→ {"type": "CHAT_DM", "target": "user2", "content": "Hai, ini private"}
-← {"type": "CHAT_DM", "from": "user1", "to": "user2", "content": "Hai, ini private"}
+```json
+{"type": "CHAT_DM", "target": "user2", "content": "Hai, ini private"}
+{"type": "CHAT_DM", "from": "user1", "to": "user2", "content": "Hai, ini private"}
 ```
 
 **Sinkronisasi Video:**
 
 ```json
-→ {"type": "VIDEO_SYNC", "roomId": 1, "event": "play", "videoTime": 42.5, "videoUrl": "https://..."}
-← {"type": "VIDEO_STATE", "roomId": 1, "username": "user1", "event": "play", "videoTime": 42.5, "videoUrl": "https://..."}  // broadcast ke member lain
+{"type": "VIDEO_SYNC", "roomId": 1, "event": "play", "videoTime": 42.5, "videoUrl": "https://..."}
+{"type": "VIDEO_STATE", "roomId": 1, "username": "user1", "event": "play", "videoTime": 42.5, "videoUrl": "https://..."}  // broadcast ke member lain
 ```
 
 ### Pola Komunikasi
