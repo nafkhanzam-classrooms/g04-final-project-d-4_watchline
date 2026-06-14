@@ -15,6 +15,21 @@ type YouTubePlayer = {
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;
 };
 
+function isYouTubePlayer(value: unknown): value is YouTubePlayer {
+  if (!value || typeof value !== "object") return false;
+
+  const player = value as Partial<YouTubePlayer>;
+  return (
+    typeof player.cueVideoById === "function" &&
+    typeof player.destroy === "function" &&
+    typeof player.getCurrentTime === "function" &&
+    typeof player.getPlayerState === "function" &&
+    typeof player.pauseVideo === "function" &&
+    typeof player.playVideo === "function" &&
+    typeof player.seekTo === "function"
+  );
+}
+
 type YouTubeNamespace = {
   Player: new (
     elementId: string,
@@ -121,11 +136,12 @@ export function useWatchParty(roomId: number) {
       nextVideoId?: string,
     ) => {
       if (applyingRemoteRef.current) return;
+      const player = playerRef.current;
       send({
         type: "VIDEO_SYNC",
         roomId,
         event,
-        videoTime: playerRef.current?.getCurrentTime() ?? 0,
+        videoTime: isYouTubePlayer(player) ? player.getCurrentTime() : 0,
         ...(nextVideoId
           ? {
               videoUrl: `https://www.youtube.com/watch?v=${nextVideoId}`,
@@ -143,7 +159,7 @@ export function useWatchParty(roomId: number) {
       videoUrl?: string;
     }) => {
       const player = playerRef.current;
-      if (!player) {
+      if (!isYouTubePlayer(player)) {
         pendingRemoteRef.current = remote;
         return;
       }
@@ -180,10 +196,11 @@ export function useWatchParty(roomId: number) {
 
   useEffect(() => {
     let disposed = false;
+    let createdPlayer: unknown = null;
 
     void loadYouTubeApi().then((YT) => {
       if (disposed || playerRef.current) return;
-      playerRef.current = new YT.Player(playerElementId, {
+      createdPlayer = new YT.Player(playerElementId, {
         height: "100%",
         width: "100%",
         playerVars: {
@@ -193,7 +210,7 @@ export function useWatchParty(roomId: number) {
         },
         events: {
           onReady: ({ target }) => {
-            if (disposed) return;
+            if (disposed || !isYouTubePlayer(target)) return;
             playerRef.current = target;
             setIsPlayerReady(true);
             if (pendingRemoteRef.current) {
@@ -212,7 +229,17 @@ export function useWatchParty(roomId: number) {
 
     return () => {
       disposed = true;
-      playerRef.current?.destroy();
+      const activePlayer = playerRef.current;
+      if (isYouTubePlayer(activePlayer)) {
+        activePlayer.destroy();
+      } else if (
+        createdPlayer &&
+        typeof createdPlayer === "object" &&
+        "destroy" in createdPlayer &&
+        typeof createdPlayer.destroy === "function"
+      ) {
+        createdPlayer.destroy();
+      }
       playerRef.current = null;
     };
   }, [applyRemoteState, playerElementId, sendSync]);
@@ -229,7 +256,7 @@ export function useWatchParty(roomId: number) {
   useEffect(() => {
     const timer = window.setInterval(() => {
       const player = playerRef.current;
-      if (!player || applyingRemoteRef.current) {
+      if (!isYouTubePlayer(player) || applyingRemoteRef.current) {
         return;
       }
 
@@ -260,11 +287,12 @@ export function useWatchParty(roomId: number) {
 
   const changeVideo = (value: string) => {
     const nextVideoId = parseYouTubeVideoId(value);
-    if (!nextVideoId || !playerRef.current) return false;
+    const player = playerRef.current;
+    if (!nextVideoId || !isYouTubePlayer(player)) return false;
 
     applyingRemoteRef.current = true;
     setVideoId(nextVideoId);
-    playerRef.current.cueVideoById({ videoId: nextVideoId, startSeconds: 0 });
+    player.cueVideoById({ videoId: nextVideoId, startSeconds: 0 });
     window.setTimeout(() => {
       applyingRemoteRef.current = false;
     }, 500);
