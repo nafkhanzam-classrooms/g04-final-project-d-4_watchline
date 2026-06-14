@@ -25,5 +25,17 @@ services:
     environment:
       DB_HOST: db
 
+  client:
+    build:
+      context: ./client
+      args:
+        NEXT_PUBLIC_WS_URL: ws://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    environment:
+      NEXT_PUBLIC_WS_URL: ws://localhost:8080
+
 volumes:
   pgdata:
