@@ -372,3 +372,17 @@ Internet (HTTPS)
 | **Nginx**            | Reverse proxy yang mengarahkan request ke container yang sesuai dan menangani upgrade WebSocket |
 | **Tailscale**        | Membuat jaringan mesh VPN untuk menghubungkan node tanpa konfigurasi firewall                   |
 | **Tailscale Funnel** | Mengekspos layanan lokal ke internet publik melalui domain `*.ts.net` dengan HTTPS otomatis     |
+
+## Screenshot Aplikasi
+
+### Login & Register
+
+![Login & Register](/docs/login.jpeg)
+
+### Watch Party & Chat Room
+
+![Watch Party](/docs/watch-party.jpeg)
+
+### Direct Chat
+
+![Direct Chat](/docs/direct-chat.jpeg)
